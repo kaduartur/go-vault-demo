@@ -56,12 +56,12 @@ func (vm *Manager) Delete(key string) error {
 	return nil
 }
 
-func (vm *Manager) EncryptCardNumber(num string) (string, error) {
+func (vm *Manager) Encrypt(data string) (string, error) {
 	vm.setToken()
 	path := fmt.Sprintf(vaultEncrypt, "credit_card")
-	data := make(map[string]interface{})
-	data["plaintext"] = base64.StdEncoding.EncodeToString([]byte(num))
-	res, err := vm.client.Logical().Write(path, data)
+	body := make(map[string]interface{})
+	body["plaintext"] = base64.StdEncoding.EncodeToString([]byte(data))
+	res, err := vm.client.Logical().Write(path, body)
 	if err != nil {
 		log.Println("Vault encrypt error", err)
 		return "", err

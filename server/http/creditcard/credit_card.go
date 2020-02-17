@@ -35,7 +35,7 @@ func (h *Handler) HandleCard() http.Handler {
 }
 
 func (h *Handler) processPost(w http.ResponseWriter, r *http.Request) {
-	var c server.CreditCard
+	var c server.CreditCardRequest
 	defer r.Body.Close()
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 		log.Println("Failed to process request", err)
@@ -44,11 +44,26 @@ func (h *Handler) processPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cipher, err := h.vaultManger.EncryptCardNumber(c.Number)
+	cardId, err := h.createCard(c)
 	if err != nil {
 		log.Println(err)
 		_, _ = w.Write([]byte(err.Error()))
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
+	}
+
+	resp := make(map[string]interface{})
+	resp["cardId"] = cardId
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+func (h *Handler) createCard(c server.CreditCardRequest) (string, error) {
+	cipher, err := h.vaultManger.Encrypt(c.Number)
+	if err != nil {
+		return "", err
 	}
 
 	lastDigits := c.Number[len(c.Number)-4:]
@@ -66,18 +81,10 @@ func (h *Handler) processPost(w http.ResponseWriter, r *http.Request) {
 
 	cardId, err := h.cardRepository.Save(cardEntity)
 	if err != nil {
-		log.Println(err)
-		_, _ = w.Write([]byte("Unknown error"))
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		return
+		return "", err
 	}
 
-	resp := make(map[string]interface{})
-	resp["cardId"] = cardId
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(resp)
+	return cardId, nil
 }
 
 func (h *Handler) processGet(w http.ResponseWriter, r *http.Request) {
@@ -105,9 +112,9 @@ func cardId(path string) string {
 }
 
 func expirationDate(d string) time.Time {
-	split := strings.Split(d, "/")
-	month, _ := strconv.Atoi(split[0])
-	year, _ := strconv.Atoi(split[1])
+	ss := strings.Split(d, "/")
+	m, _ := strconv.Atoi(ss[0])
+	y, _ := strconv.Atoi(ss[1])
 
-	return time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.Local)
+	return time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.Local)
 }

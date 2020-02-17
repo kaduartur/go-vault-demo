@@ -7,4 +7,5 @@ require (
 	github.com/hashicorp/go-uuid v1.0.1
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/lib/pq v1.3.0
+	github.com/segmentio/kafka-go v0.3.5
 )
