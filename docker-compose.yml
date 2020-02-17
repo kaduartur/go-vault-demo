@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+
+  postgresql:
+    image: postgres:12.1
+    ports:
+      - "5432:5432"
+    volumes:
+      - /var/lib/postgresql/data
+      - ./resources/docker-init-db.sql:/docker-entrypoint-initdb.d/docker-init-db.sql
+    environment:
+      - POSTGRES_DB=vault_demo
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - TZ=UTC
+
+  vault:
+    image: vault:1.3.0
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./resources/vault_config.hcl:/vault/config/vault_config.hcl
+    environment:
+      - VAULT_DEV_ROOT_TOKEN_ID=0f55f2f0-4e78-4331-8597-5b4f0abbcd08
+      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+      - SKIP_SETCAP=true
+      - disable_mlock=true
