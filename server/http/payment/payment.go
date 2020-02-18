@@ -94,6 +94,7 @@ func (h *Handler) processPost(w http.ResponseWriter, r *http.Request) {
 
 	resp := make(map[string]interface{})
 	resp["paymentId"] = payId
+	resp["status"] = "PROCESSING"
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)

@@ -22,6 +22,10 @@ path "secret/*" {
   capabilities = ["read"]
 }
 
+path "kv/*" {
+  capabilities = ["create", "update", "delete", "read", "list"]
+}
+
 path "demo/credit-card/*" {
   capabilities = ["create", "update", "delete", "read", "list"]
 }
